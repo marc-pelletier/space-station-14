@@ -16,21 +16,20 @@ public sealed partial class HealiumProductionReaction : IGasReactionEffect
         var initBZ = mixture.GetMoles(Gas.BZ);
         var initFrezon = mixture.GetMoles(Gas.Frezon);
 
-        var rate = mixture.Temperature / Atmospherics.T20C;
-        var efficiency = 23.15f / mixture.Temperature;
+        var efficiency = (float)Math.Min(mixture.Temperature * 0.3, Math.Min(initFrezon * 0.36, initBZ * 4));
 
-        var bZRemoved = 2f * rate;
-        var frezonRemoved = 4f * rate;
-        var healiumProduced = 6f * rate * efficiency;
+        var bZRemoved = (float)(efficiency * 0.25);
+        var frezonRemoved = (float)(efficiency * 2.75);
+        var healiumProduced = (float)(efficiency * 3);
 
-        if (bZRemoved > initBZ || frezonRemoved > initFrezon || mixture.Temperature > Atmospherics.T20C)
+        if (efficiency <= 0 || initFrezon - frezonRemoved < 0 || initBZ - bZRemoved < 0)
             return ReactionResult.NoReaction;
 
         mixture.AdjustMoles(Gas.BZ, -bZRemoved);
         mixture.AdjustMoles(Gas.Frezon, -frezonRemoved);
         mixture.AdjustMoles(Gas.Healium, healiumProduced);
 
-        var energyReleased = healiumProduced * Atmospherics.HealiumProductionEnergy;
+        var energyReleased = efficiency * Atmospherics.HealiumProductionEnergy;
         var heatCap = atmosphereSystem.GetHeatCapacity(mixture, true);
         if (heatCap > Atmospherics.MinimumHeatCapacity)
             mixture.Temperature = Math.Max((mixture.Temperature * heatCap + energyReleased) / heatCap, Atmospherics.TCMB);
