@@ -13,14 +13,17 @@ public sealed partial class HealiumProductionReaction : IGasReactionEffect
 {
     public ReactionResult React(GasMixture mixture, IGasMixtureHolder? holder, AtmosphereSystem atmosphereSystem, float heatScale)
     {
+        if (mixture.Temperature > 300f || mixture.Temperature < 22f)
+            return ReactionResult.NoReaction;
+
         var initBZ = mixture.GetMoles(Gas.BZ);
         var initFrezon = mixture.GetMoles(Gas.Frezon);
 
-        var efficiency = (float)Math.Min(mixture.Temperature * 0.3, Math.Min(initFrezon * 0.36, initBZ * 4));
+        var efficiency = Math.Min(mixture.Temperature * 0.3f, Math.Min(initFrezon * 0.36f, initBZ * 4f));
 
-        var bZRemoved = (float)(efficiency * 0.25);
-        var frezonRemoved = (float)(efficiency * 2.75);
-        var healiumProduced = (float)(efficiency * 3);
+        var bZRemoved = efficiency * 0.25f;
+        var frezonRemoved = efficiency * 2.75f;
+        var healiumProduced = efficiency * 3f;
 
         if (efficiency <= 0 || initFrezon - frezonRemoved < 0 || initBZ - bZRemoved < 0)
             return ReactionResult.NoReaction;
